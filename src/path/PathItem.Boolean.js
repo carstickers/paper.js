@@ -107,7 +107,7 @@ PathItem.inject(new function() {
         return inter.hasOverlap() || inter.isCrossing();
     }
 
-    function traceBoolean(path1, path2, operation, options) {
+    function traceBoolean(path1, path2, operation, prepare, options) {
         // Only support subtract and intersect operations when computing stroke
         // based boolean operations (options.split = true).
         if (options && (options.trace == false || options.stroke) &&
@@ -117,8 +117,8 @@ PathItem.inject(new function() {
         // fas produced by the calls to preparePath().
         // NOTE: The result paths might not belong to the same type i.e.
         // subtract(A:Path, B:Path):CompoundPath etc.
-        var _path1 = preparePath(path1, true),
-            _path2 = path2 && path1 !== path2 && preparePath(path2, true),
+        var _path1 = prepare ? preparePath(path1, true) : path1,
+            _path2 = path2 && path1 !== path2 && (prepare ? preparePath(path2, true) : path2),
             // Retrieve the operator lookup table for winding numbers.
             operator = operators[operation];
         // Add a simple boolean property to check for a given operation,
@@ -127,7 +127,7 @@ PathItem.inject(new function() {
         // Give both paths the same orientation except for subtraction
         // and exclusion, where we need them at opposite orientation.
         if (_path2 && (operator.subtract || operator.exclude)
-                ^ (_path2.isClockwise() ^ _path1.isClockwise()))
+                ^ (_path2.isClockwise() ^ _path1.isClockwise()))npm
             _path2.reverse();
         // Split curves at crossings on both paths. Note that for self-
         // intersection, path2 is null and getIntersections() handles it.
@@ -212,7 +212,8 @@ PathItem.inject(new function() {
                         return !!operator[w];
                     });
         }
-        return createResult(paths, true, path1, path2, options);
+
+        return createResult(paths, true, path1, path2, prepare ? options : null);
     }
 
     function splitBoolean(path1, path2, operation) {
@@ -1139,7 +1140,44 @@ PathItem.inject(new function() {
          * @return {PathItem} the resulting path item
          */
         unite: function(path, options) {
-            return traceBoolean(this, path, 'unite', options);
+            return traceBoolean(this, path, 'unite', true, options);
+        },
+
+        /**
+         * {@grouptitle Boolean Path Operations}
+         *
+         * Unites the geometry of the specified list of paths with this path's geometry
+         * and returns the result as a new path item.
+         *
+         * @option [options.insert=true] {Boolean} whether the resulting item
+         *     should be inserted back into the scene graph, above both paths
+         *     involved in the operation
+         *
+         * @param {PathItem[]} paths the paths to unite with
+         * @param {Object} [options] the boolean operation options
+         * @return {PathItem} the resulting path item
+         */
+        uniteList: function(paths, options) {
+            if (!paths || paths.length === 0) {
+                return this;
+            }
+
+            let result = preparePath(this);
+            for (const path of paths) {
+                result = traceBoolean(result, preparePath(path), 'unite', false, options);
+            }
+
+            // Insert the resulting path above whichever of the two paths appear
+            // further up in the stack.
+            if (!(options && options.insert == false)) {
+                let root = this;
+                for (const path of paths) {
+                    root = path && root.isSibling(path)  && root.getIndex() < path.getIndex() ? path : root
+                }
+                result.insertAbove(root);
+            }
+
+            return result;
         },
 
         /**
@@ -1160,7 +1198,7 @@ PathItem.inject(new function() {
          * @return {PathItem} the resulting path item
          */
         intersect: function(path, options) {
-            return traceBoolean(this, path, 'intersect', options);
+            return traceBoolean(this, path, 'intersect', true, options);
         },
 
         /**
@@ -1181,7 +1219,7 @@ PathItem.inject(new function() {
          * @return {PathItem} the resulting path item
          */
         subtract: function(path, options) {
-            return traceBoolean(this, path, 'subtract', options);
+            return traceBoolean(this, path, 'subtract', true, options);
         },
 
         /**
@@ -1197,7 +1235,7 @@ PathItem.inject(new function() {
          * @return {PathItem} the resulting path item
          */
         exclude: function(path, options) {
-            return traceBoolean(this, path, 'exclude', options);
+            return traceBoolean(this, path, 'exclude', true, options);
         },
 
         /**
