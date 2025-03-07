@@ -2459,6 +2459,9 @@ new function() { // Injection scope for hit-test functions shared with project
      * @option [options.reduceAttributes=true] {Boolean} wether to only include
      *     style attributes in the SVG output that differ from their parents,
      *     or to always include them (much faster but leading to redundancies).
+     * @option [options.linkImages=false] {Boolean} whether raster images should
+     *     be linked using a definition and use tag, or place the data/url in
+     *     the image href attribute.
      *
      * @param {Object} [options] the export options
      * @return {SVGElement|String} the item converted to an SVG node or a
