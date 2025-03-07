@@ -36,11 +36,12 @@ var Item = Base.extend(Emitter, /** @lends Item# */{
         },
 
         /**
-         * An object constant that can be passed to Item#initialize() to avoid
-         * insertion into the scene graph.
+         * Two object constants that can be passed to Item#initialize() to
+         * control insertion into the scene graph in a performative way.
          *
          * @private
          */
+        INSERT: { insert: true },
         NO_INSERT: { insert: false }
     },
 
@@ -153,16 +154,16 @@ new function() { // Injection scope for various item event handlers
         matrix._owner = this;
         this._style = new Style(project._currentStyle, this, project);
         // Do not add to the project if it's an internal path,  or if
-        // props.insert  or settings.isnertItems is false.
+        // props.insert  or settings.insertItems is false.
         if (internal || hasProps && props.insert == false
-            || !settings.insertItems && !(hasProps && props.insert === true)) {
+            || !settings.insertItems && !(hasProps && props.insert == true)) {
             this._setProject(project);
         } else {
             (hasProps && props.parent || project)
                     ._insertItem(undefined, this, true); // _created = true
         }
-        // Filter out Item.NO_INSERT before _set(), for performance reasons.
-        if (hasProps && props !== Item.NO_INSERT) {
+        // Filter out Item.*INSERT before _set(), for performance reasons.
+        if (hasProps && props !== Item.NO_INSERT && props !== Item.INSERT) {
             this.set(props, {
                 // Filter out these properties as they were handled above:
                 internal: true, insert: true, project: true, parent: true
@@ -1587,6 +1588,15 @@ new function() { // Injection scope for various item event handlers
         return this._index;
     },
 
+    setIndex: function(index) {
+        var parent = this._parent,
+            children = parent && parent._children;
+        if (children) {
+            parent.insertChildren(index in children ? index : undefined,
+                                  [this]);
+        }
+    },
+
     equals: function(item) {
         // NOTE: We do not compare name and selected state.
         // TODO: Consider not comparing locked and visible also?
@@ -2446,6 +2456,9 @@ new function() { // Injection scope for hit-test functions shared with project
      * @option [options.embedImages=true] {Boolean} whether raster images should
      *     be embedded as base64 data inlined in the xlink:href attribute, or
      *     kept as a link to their external URL.
+     * @option [options.reduceAttributes=true] {Boolean} wether to only include
+     *     style attributes in the SVG output that differ from their parents,
+     *     or to always include them (much faster but leading to redundancies).
      *
      * @param {Object} [options] the export options
      * @return {SVGElement|String} the item converted to an SVG node or a
