@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Fri Mar 7 12:41:28 2025 -0800
+ * Date: Mon Mar 10 11:52:02 2025 -0700
  *
  ***
  *
@@ -10407,7 +10407,7 @@ PathItem.inject(new function() {
 			operator = operators[operation];
 		operator[operation] = true;
 		if (_path2 && (operator.subtract || operator.exclude)
-				^ (_path2.isClockwise() ^ _path1.isClockwise()))npm
+				^ (_path2.isClockwise() ^ _path1.isClockwise()))
 			_path2.reverse();
 		var crossings = divideLocations(CurveLocation.expand(
 				_path1.getIntersections(_path2, filterIntersection))),
