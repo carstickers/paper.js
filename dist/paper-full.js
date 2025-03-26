@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Mon Mar 10 11:52:02 2025 -0700
+ * Date: Wed Mar 26 15:30:17 2025 -0700
  *
  ***
  *
@@ -10366,20 +10366,22 @@ PathItem.inject(new function() {
 			.reduce({ simplify: true })
 			.transform(null, true, true);
 		if (resolve) {
-			var paths = getPaths(res);
-			for (var i = 0, l = paths.length; i < l; i++) {
-				var path = paths[i];
-				if (!path._closed && !path.isEmpty()) {
-					path.closePath(1e-12);
-					path.getFirstSegment().setHandleIn(0, 0);
-					path.getLastSegment().setHandleOut(0, 0);
-				}
-			}
-			res = res
-				.resolveCrossings()
-				.reorient(res.getFillRule() === 'nonzero', true);
+			return resolvePath(res);
 		}
 		return res;
+	}
+
+	function resolvePath(res) {
+		var paths = getPaths(res);
+		for (var i = 0, l = paths.length; i < l; i++) {
+			var path = paths[i];
+			if (!path._closed && !path.isEmpty()) {
+				path.closePath(1e-12);
+				path.getFirstSegment().setHandleIn(0, 0);
+				path.getLastSegment().setHandleOut(0, 0);
+			}
+		}
+		return res.resolveCrossings().reorient(res.getFillRule() === 'nonzero', true);
 	}
 
 	function createResult(paths, simplify, path1, path2, options) {
@@ -11087,15 +11089,16 @@ PathItem.inject(new function() {
 				return this;
 			}
 
-			let result = preparePath(this);
+			let result = preparePath(this, true);
 			for (const path of paths) {
 				result = traceBoolean(result, preparePath(path), 'unite', false, options);
 			}
+			result = resolvePath(result);
 
 			if (!(options && options.insert == false)) {
 				let root = this;
 				for (const path of paths) {
-					root = path && root.isSibling(path)  && root.getIndex() < path.getIndex() ? path : root
+					root = path && root.isSibling(path)  && root.getIndex() < path.getIndex() ? path : root;
 				}
 				result.insertAbove(root);
 			}
