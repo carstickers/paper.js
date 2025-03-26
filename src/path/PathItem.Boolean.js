@@ -61,23 +61,25 @@ PathItem.inject(new function() {
             .reduce({ simplify: true })
             .transform(null, true, true);
         if (resolve) {
-            // For correct results, close open paths with straight lines:
-            var paths = getPaths(res);
-            for (var i = 0, l = paths.length; i < l; i++) {
-                var path = paths[i];
-                if (!path._closed && !path.isEmpty()) {
-                    // Close with epsilon tolerance, to avoid tiny straight
-                    // that would cause issues with intersection detection.
-                    path.closePath(/*#=*/Numerical.EPSILON);
-                    path.getFirstSegment().setHandleIn(0, 0);
-                    path.getLastSegment().setHandleOut(0, 0);
-                }
-            }
-            res = res
-                .resolveCrossings()
-                .reorient(res.getFillRule() === 'nonzero', true);
+            return resolvePath(res);
         }
         return res;
+    }
+
+    function resolvePath(res) {
+        // For correct results, close open paths with straight lines:
+        var paths = getPaths(res);
+        for (var i = 0, l = paths.length; i < l; i++) {
+            var path = paths[i];
+            if (!path._closed && !path.isEmpty()) {
+                // Close with epsilon tolerance, to avoid tiny straight
+                // that would cause issues with intersection detection.
+                path.closePath(/*#=*/Numerical.EPSILON);
+                path.getFirstSegment().setHandleIn(0, 0);
+                path.getLastSegment().setHandleOut(0, 0);
+            }
+        }
+        return res.resolveCrossings().reorient(res.getFillRule() === 'nonzero', true);
     }
 
     function createResult(paths, simplify, path1, path2, options) {
@@ -1163,17 +1165,18 @@ PathItem.inject(new function() {
                 return this;
             }
 
-            let result = preparePath(this);
+            let result = preparePath(this, true);
             for (const path of paths) {
                 result = traceBoolean(result, preparePath(path), 'unite', false, options);
             }
+            result = resolvePath(result);
 
             // Insert the resulting path above whichever of the two paths appear
             // further up in the stack.
             if (!(options && options.insert == false)) {
                 let root = this;
                 for (const path of paths) {
-                    root = path && root.isSibling(path)  && root.getIndex() < path.getIndex() ? path : root
+                    root = path && root.isSibling(path)  && root.getIndex() < path.getIndex() ? path : root;
                 }
                 result.insertAbove(root);
             }
