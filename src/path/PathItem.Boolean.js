@@ -1167,7 +1167,7 @@ PathItem.inject(new function() {
 
             let result = preparePath(this, true);
             for (const path of paths) {
-                result = traceBoolean(result, preparePath(path), 'unite', false, options);
+                result = traceBoolean(result, preparePath(path, true), 'unite', false, options);
             }
             result = resolvePath(result);
 
