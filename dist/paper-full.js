@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Wed Mar 26 15:30:17 2025 -0700
+ * Date: Mon Mar 31 15:47:34 2025 -0700
  *
  ***
  *
@@ -11091,7 +11091,7 @@ PathItem.inject(new function() {
 
 			let result = preparePath(this, true);
 			for (const path of paths) {
-				result = traceBoolean(result, preparePath(path), 'unite', false, options);
+				result = traceBoolean(result, preparePath(path, true), 'unite', false, options);
 			}
 			result = resolvePath(result);
 
