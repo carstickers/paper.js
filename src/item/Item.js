@@ -4473,8 +4473,7 @@ new function() { // Injection scope for hit-test functions shared with project
                 ctx.globalCompositeOperation = blendMode;
         }
         if (transform) {
-            // Apply viewMatrix when drawing into temporary canvas.
-            (direct ? matrix : viewMatrix).applyToContext(ctx);
+            matrix.applyToContext(ctx);
         }
         if (clip) {
             param.clipItem.draw(ctx, param.extend({ clip: true }));
