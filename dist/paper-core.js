@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Mon Mar 31 15:47:34 2025 -0700
+ * Date: Fri May 1 15:51:41 2026 -0700
  *
  ***
  *
@@ -4731,20 +4731,11 @@ new function() {
 					|| (nativeBlend || normalBlend && opacity < 1)
 						&& this._canComposite(),
 			pixelRatio = param.pixelRatio || 1,
-			mainCtx, itemOffset, prevOffset;
+			mainCtx;
 		if (!direct) {
-			var bounds = this.getStrokeBounds(viewMatrix);
-			if (!bounds.width || !bounds.height) {
-				matrices.pop();
-				return;
-			}
-			prevOffset = param.offset;
-			itemOffset = param.offset = bounds.getTopLeft().floor();
 			mainCtx = ctx;
-			ctx = CanvasProvider.getContext(bounds.getSize().ceil().add(1)
-					.multiply(pixelRatio));
-			if (pixelRatio !== 1)
-				ctx.scale(pixelRatio, pixelRatio);
+			ctx = CanvasProvider.getContext(ctx.canvas.width, ctx.canvas.height)
+			ctx.setTransform(mainCtx.getTransform());
 		}
 		ctx.save();
 		var strokeMatrix = parentStrokeMatrix
@@ -4757,11 +4748,9 @@ new function() {
 			ctx.globalAlpha = opacity;
 			if (nativeBlend)
 				ctx.globalCompositeOperation = blendMode;
-		} else if (transform) {
-			ctx.translate(-itemOffset.x, -itemOffset.y);
 		}
 		if (transform) {
-			(direct ? matrix : viewMatrix).applyToContext(ctx);
+			matrix.applyToContext(ctx);
 		}
 		if (clip) {
 			param.clipItem.draw(ctx, param.extend({ clip: true }));
@@ -4779,10 +4768,8 @@ new function() {
 			ctx.clip(this.getFillRule());
 		}
 		if (!direct) {
-			BlendMode.process(blendMode, ctx, mainCtx, opacity,
-					itemOffset.subtract(prevOffset).multiply(pixelRatio));
+			BlendMode.process(blendMode, ctx, mainCtx, opacity, new Point(0, 0));
 			CanvasProvider.release(ctx);
-			param.offset = prevOffset;
 		}
 	},
 
