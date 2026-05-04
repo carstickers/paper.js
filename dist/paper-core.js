@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Fri May 1 15:51:41 2026 -0700
+ * Date: Mon May 4 09:15:34 2026 -0700
  *
  ***
  *
@@ -4731,10 +4731,16 @@ new function() {
 					|| (nativeBlend || normalBlend && opacity < 1)
 						&& this._canComposite(),
 			pixelRatio = param.pixelRatio || 1,
-			mainCtx;
+			mainCtx, itemOffset, prevOffset;
 		if (!direct) {
+			var bounds = this.getStrokeBounds(viewMatrix);
+			if (!bounds.width || !bounds.height) {
+				matrices.pop();
+				return;
+			}
+
 			mainCtx = ctx;
-			ctx = CanvasProvider.getContext(ctx.canvas.width, ctx.canvas.height)
+			ctx = CanvasProvider.getContext(ctx.canvas.width, ctx.canvas.height);
 			ctx.setTransform(mainCtx.getTransform());
 		}
 		ctx.save();
