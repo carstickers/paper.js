@@ -4447,10 +4447,20 @@ new function() { // Injection scope for hit-test functions shared with project
                     || (nativeBlend || normalBlend && opacity < 1)
                         && this._canComposite(),
             pixelRatio = param.pixelRatio || 1,
-            mainCtx;
+            mainCtx, itemOffset, prevOffset;
         if (!direct) {
+            // Apply the parent's global matrix to the calculation of correct
+            // bounds.
+            var bounds = this.getStrokeBounds(viewMatrix);
+            if (!bounds.width || !bounds.height) {
+                // Item won't be drawn so its global matrix need to be removed
+                // from the stack (#1561).
+                matrices.pop();
+                return;
+            }
+
             mainCtx = ctx;
-            ctx = CanvasProvider.getContext(ctx.canvas.width, ctx.canvas.height)
+            ctx = CanvasProvider.getContext(ctx.canvas.width, ctx.canvas.height);
             ctx.setTransform(mainCtx.getTransform());
         }
         ctx.save();
